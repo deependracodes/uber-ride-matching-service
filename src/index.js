@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const connectToMongoDB = require("./utils/mongoClient");
-const redisClient = require("./utils/redisClient");
+// const redisClient = require("./utils/redisClient");
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -10,6 +10,7 @@ const cors = require("cors");
 
 const authRouter = require("./routes/auth.router");
 const driverRouter = require("./routes/driver.router");
+const passengerRouter = require("./routes/passenger.router");
 
 
 const app = express();
@@ -34,8 +35,9 @@ app.use("/health", (req, res) => {
 });
 
 
-app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/driver", driverRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/passenger", passengerRouter);
+app.use("/api/driver",driverRouter)
 
 
 app.use((req, res, next) => {
