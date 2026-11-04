@@ -18,6 +18,11 @@ const bookingSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         comment: "Static field can add X fare"
+    },
+
+    distance: {
+        type: Number,
+        default: 0,
     }
     ,
     status: {
@@ -42,7 +47,7 @@ const bookingSchema = new mongoose.Schema({
             type: Number,
             required: true
         },
-        longitute: {
+        longitude: {
             type: Number,
             required: true
         }

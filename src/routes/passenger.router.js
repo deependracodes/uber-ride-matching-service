@@ -1,19 +1,17 @@
 const express = require("express");
 const { createBookingHandler, addFeedBackHandler, rideHistoryHandler } = require("../controllers/passenger.controller");
+const authMiddleware = require("../middlewares/auth.middleware");
 
 const passengerRouter = express.Router();
 
 
-module.exports = (io) => {
+passengerRouter.post("/ride", authMiddleware, createBookingHandler);
 
-    passengerRouter.post("/ride", createBookingHandler);
+passengerRouter.post("/feedback", addFeedBackHandler);
 
-    passengerRouter.post("/feedback", addFeedBackHandler);
-
-    passengerRouter.get("/bookings", rideHistoryHandler);
+passengerRouter.get("/bookings", rideHistoryHandler);
 
 
 
-    return passengerRouter;
+module.exports = passengerRouter;
 
-}

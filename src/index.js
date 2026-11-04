@@ -2,7 +2,6 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const connectToMongoDB = require("./utils/mongoClient");
-// const redisClient = require("./utils/redisClient");
 const express = require("express");
 const http = require("http");
 const cors = require("cors");

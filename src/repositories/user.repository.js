@@ -11,7 +11,15 @@ async function findByEmail(email) {
     return await User.findOne({ email });
 }
 
+
+
+async function findById(id) {
+    return await User.findOne({ _id : id });
+}
+
+
 module.exports = {
     create,
-    findByEmail
+    findByEmail,
+    findById
 };
