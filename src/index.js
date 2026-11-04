@@ -13,6 +13,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 
+app.use("/public", express.static("public"));
+
+// server public/driver.html file
+app.get("/public/driver.html", (req, res) => {
+    res.sendFile(__dirname + "/public/driver.html");
+});
+
+
+
 app.use("/health", (req, res) => {
     res.status(200).json({ message: "Server is healthy" });
 });

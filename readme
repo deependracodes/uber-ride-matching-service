@@ -8,7 +8,7 @@
   - Javascript
   - MongoDB
   - Redis
-  - Socket
+  - Socket (over pooling)
 
 # Apis
   - auth
