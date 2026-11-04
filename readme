@@ -1,0 +1,24 @@
+# Uber (Ride Matching Service)
+
+# Monolith Archiecture
+
+# Tech Stack
+  - NodeJs
+  - Express
+  - Javascript
+  - MongoDB
+  - Redis
+  - Socket
+
+# Apis
+  - auth
+  - create ride request
+  - Fare Estimation (exclude)
+  - confirm booking
+  - get nearby drivers
+  - notify drivers
+  - accept ride
+  - eta calc(extact time to arrival)
+  - start ride
+  - complete ride
+  - get ride history
