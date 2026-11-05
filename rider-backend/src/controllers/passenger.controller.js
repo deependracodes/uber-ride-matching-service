@@ -1,4 +1,4 @@
-const bookingService = require("../services/booking.service.js");
+const bookingService = require("../services/booking.service");
 
 
 async function createBookingHandler(params) {
@@ -14,9 +14,13 @@ async function createBookingHandler(params) {
             destination
         })
 
-        // automatically find nearby driver using redis db
-        
+        // find nearby driver using redis db
+        const drivers = [];
 
+        const nearByDrivers = await bookingService.findNearByDrivers(source)
+
+        console.log(nearByDrivers);
+        
         // notify the drivers
 
 

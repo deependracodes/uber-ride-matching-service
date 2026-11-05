@@ -22,3 +22,30 @@
   - start ride
   - complete ride
   - get ride history
+
+
+# Flow
+  - In real world a connection is made between driver and redis by using websocket or pooling or message queue (kafka or other)
+  - driver -> updateLocation() -> redis + mongodb
+  - passesnger -> createBooking()->nearByLocation() -> (radius 1km,2km,5km (defualt for now 5km)) -> redis -> notify -> accept/reject(confirmBooking) -> 
+
+
+websocket - are like opening a persistent tunnel b/w client and server
+, will be used for notifing ride requests
+
+
+# xyz - createBooking();
+
+# a,b,c - drivers online and d offline
+
+# findNearByDrivers and get detials form db 
+
+# Redis store
+  - driver:a - socket(1) -> recieves msg (new ride request) -> confirmBooking
+  - driver:b - socket(2)
+  - driver:c - socket(3) -> -> recieves msg (as soon as a accepts the goes vanishes)
+
+# Redis store for messaging/notifying
+  - BookingId : [a,b,c]
+  - keep [a] remove [b,c]
+

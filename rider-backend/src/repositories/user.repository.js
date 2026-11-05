@@ -14,12 +14,22 @@ async function findByEmail(email) {
 
 
 async function findById(id) {
-    return await User.findOne({ _id : id });
+    return await User.findOne({ _id: id });
 }
 
+
+
+async function updateLocation(driverId, location) {
+    return await User.findOneAndUpdate({ _id: id }, {
+        $set: {
+            locationa
+        }
+    },{new:true});
+}
 
 module.exports = {
     create,
     findByEmail,
-    findById
+    findById,
+    updateLocation
 };
