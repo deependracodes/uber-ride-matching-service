@@ -1,6 +1,11 @@
+const express = require("express");
+const path = require('path');
 const { app, server, io } = require("./config/app.config");
 const notificationRouter = require("./routes/notification.router")
 const { setDriverSocket} = require("./services/driver.service")
+
+
+app.use(express.static(path.join(__dirname, 'public')));
 app.use("/api", notificationRouter);
 
 const PORT = process.env.PORT || 3001

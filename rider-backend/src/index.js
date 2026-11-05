@@ -20,12 +20,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 
-app.use("/public", express.static("public"));
-
-// server public/driver.html file
-app.get("/public/driver.html", (req, res) => {
-    res.sendFile(__dirname + "/public/driver.html");
-});
 
 
 

@@ -14,7 +14,7 @@ async function notifyDrivers(req, res) {
         const notifiedDrivers = []
         const failedDrivers = []
         for (let i = 0; i < driverIds.length; i++) {
-            const driver = array[i];
+            const driver = driverIds[i];
 
             const socketId = await getDriverSocket(driver);
 

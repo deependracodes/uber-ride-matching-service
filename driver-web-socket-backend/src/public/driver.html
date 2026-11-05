@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Driver App</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+      }
+
+      body {
+        background-color: #f4f6f8;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 400px;
+        padding: 24px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eef0f2;
+      }
+
+      .title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1d20;
+      }
+
+      .status-badge {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        background-color: #fee2e2;
+        color: #dc2626;
+      }
+
+      .status-badge.connected {
+        background-color: #d1fae5;
+        color: #059669;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 6px;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        outline: none;
+      }
+
+      .form-group input:focus {
+        border-color: #2563eb;
+      }
+
+      .form-group input:disabled {
+        background-color: #f3f4f6;
+        cursor: not-allowed;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #2563eb;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        background-color: #1d4ed8;
+      }
+
+      .btn:disabled {
+        background-color: #93c5fd;
+        cursor: not-allowed;
+      }
+
+      .ride-section {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid #eef0f2;
+      }
+
+      .ride-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 12px;
+      }
+
+      .empty-rides {
+        text-align: center;
+        padding: 20px;
+        background-color: #f9fafb;
+        border: 1px dashed #d1d5db;
+        border-radius: 6px;
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .ride-card {
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 8px;
+      }
+
+      .ride-card h4 {
+        font-size: 14px;
+        color: #1e40af;
+        margin-bottom: 4px;
+      }
+
+      .ride-card p {
+        font-size: 12px;
+        color: #3b82f6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <h1 class="title">Driver</h1>
+        <span id="statusBadge" class="status-badge">Disconnected</span>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="driver@example.com"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+        <button type="submit" id="submitBtn" class="btn">Login & Connect</button>
+      </form>
+
+      <div class="ride-section">
+        <h2 class="ride-title">Ride Notifications</h2>
+        <div id="rideContainer" class="empty-rides">No active rides</div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const loginForm = document.getElementById("loginForm");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const submitBtn = document.getElementById("submitBtn");
+      const statusBadge = document.getElementById("statusBadge");
+      const rideContainer = document.getElementById("rideContainer");
+
+      let socket = null;
+      let currentDriverId = null;
+      let currentRideNotifications = new Map();
+      let token = null;
+
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = emailInput.value;
+        const password = passwordInput.value;
+
+        try {
+          const response = await fetch("http://localhost:3000/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Login failed");
+          }
+
+          const data = await response.json();
+
+          token = data.data.token;
+          currentDriverId = data.data.user._id;
+          alert("Login successfully");
+
+          // Initialize Socket.io connection after successful REST login
+          connectSocketIO(token, data.data.user);
+        } catch (err) {
+          console.error(err);
+          alert("Login Failed");
+        }
+      });
+
+      function connectSocketIO(authToken, userData) {
+        if (!socket) {
+          socket = io("http://localhost:3001", {
+            auth: {
+              token: authToken,
+            },
+          });
+
+          setUpSocketEvents();
+        }
+
+        socket.on("connect", () => {
+          statusBadge.textContent = "Connected";
+          statusBadge.classList.add("connected");
+
+          // Emit driver login event safely after connection is established
+          socket.emit("driver-login", {
+            driverId: userData._id,
+            name: userData.name,
+            vehicleType: "MotorBike",
+            rating: userData.rating,
+          });
+        });
+
+        socket.on("disconnect", () => {
+          statusBadge.textContent = "Disconnected";
+          statusBadge.classList.remove("connected");
+        });
+
+        socket.on("connect_error", (error) => {
+          console.error("Socket.io Connection Error:", error);
+        });
+      }
+
+      function setUpSocketEvents() {
+        socket.on("login-success", (data) => {
+          emailInput.disabled = true;
+          passwordInput.disabled = true;
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Logged In & Ready";
+        });
+
+        socket.on("new-ride-notification", (data) => {
+          if (Array.isArray(data)) {
+            data.forEach(ride => {
+              const rideId = ride.rideId || ride.id || Math.random();
+              currentRideNotifications.set(rideId, ride);
+            });
+          } else {
+            const rideId = data.rideId || data.id || Math.random();
+            currentRideNotifications.set(rideId, data);
+          }
+
+          renderRidesList();
+        });
+      }
+
+      function renderRidesList() {
+        if (currentRideNotifications.size === 0) {
+          rideContainer.className = "empty-rides";
+          rideContainer.innerHTML = "No active rides";
+          return;
+        }
+
+        rideContainer.classList.remove("empty-rides");
+        rideContainer.innerHTML = "";
+
+        currentRideNotifications.forEach((notification, rideId) => {
+          const rideElement = document.createElement("div");
+          rideElement.className = "ride-card";
+          
+          const info = notification.rideInfo || {};
+          const fare = info.fare || notification.fare || 0;
+          const distance = info.distance || notification.distance || 0;
+          const srcLat = info.source?.latitude || notification.source?.latitude || 0;
+          const srcLng = info.source?.longitute || info.source?.longitude || notification.source?.longitute || notification.source?.longitude || 0;
+          const destLat = info.destination?.latitude || notification.destination?.latitude || 0;
+          const destLng = info.destination?.longitude || notification.destination?.longitude || 0;
+
+          rideElement.innerHTML = `
+              <h4>Ride #${rideId}</h4>
+              <p><strong>Fare:</strong> ₹${fare} | <strong>Distance:</strong> ${distance} km</p>
+              <p><strong>Pickup:</strong> [${srcLat}, ${srcLng}]</p>
+              <p><strong>Dropoff:</strong> [${destLat}, ${destLng}]</p>
+          `;
+          rideContainer.appendChild(rideElement);
+        });
+      }
+    </script>
+  </body>
+</html>
