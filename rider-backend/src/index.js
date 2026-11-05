@@ -1,7 +1,7 @@
 const dotenv = require("dotenv");
 dotenv.config();
 
-const connectToMongoDB = require("./utils/mongoClient");
+const connectToMongoDB = require("./utils/mongo.db");
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -53,5 +53,5 @@ app.use((err, req, res, next) => {
 
 server.listen(process.env.PORT || 3000, async() => {
     await connectToMongoDB();
-    console.log("Server is running on port " + (process.env.PORT || 3000));
+    console.log("Rider Server running on port " + (process.env.PORT || 3000));
 });

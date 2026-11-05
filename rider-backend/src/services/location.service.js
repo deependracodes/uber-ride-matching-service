@@ -1,4 +1,4 @@
-const redisClient = require("./utils/redisClient");
+const {redisClient} = require("../utils/redis.client");
 
 
 class LocationService {
