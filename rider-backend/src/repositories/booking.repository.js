@@ -13,7 +13,7 @@ async function update(bookingId,driverId,status) {
     let booking = await Booking.findOneAndUpdate(
         {_id:bookingId,status:"pending"},
         {$set:{driver:driverId,status}},
-        {new:true}
+        {returnDocument: 'after'}
     )
     return booking;
 }

@@ -38,6 +38,7 @@ async function updateLocationHandler(req, res) {
 
 async function acceptRideHandler(req, res) {
     try {
+
         const { bookingId } = req.body;
 
         const booking = await bookingService.assignDriver(bookingId, req.user._id);
@@ -49,7 +50,7 @@ async function acceptRideHandler(req, res) {
 
             // remove notification for other drivers
             const notificationResponse = await axios.post(
-                "http://localhost:3001/api/remove-ride-notification", {
+                "http://localhost:3001/api/remove-ride-notifications", {
                 rideId: bookingId,
                 driverIds: notifiedDrivers
             }
@@ -61,7 +62,7 @@ async function acceptRideHandler(req, res) {
 
 
         } catch (err) {
-            console.log('Failed to remove notification', error.message)
+            console.log('Failed to remove notification', err.message)
         }
 
         res.status(201).send({
@@ -74,14 +75,11 @@ async function acceptRideHandler(req, res) {
         })
 
     } catch (err) {
+        console.log(err)
         res.status(400).send({ message: err.message })
     }
 }
 
-
-
-async function rideHistoryHandler(req, res) {
-}
 
 
 module.exports = {

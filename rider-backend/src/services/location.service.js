@@ -5,7 +5,7 @@ class LocationService {
     async addDriverLocation(driverId, longitude,latitude) {
         try {
 
-            await redisClient.sendCommand(
+           const res= await redisClient.sendCommand(
                 [
                     "GEOADD",
                     "drivers",
@@ -14,6 +14,8 @@ class LocationService {
                     driverId.toString()
                 ]
             )
+
+            return res;
         } catch (e) {
             console.log("error adding location to redis", e)
         }

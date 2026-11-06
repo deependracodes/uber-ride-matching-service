@@ -66,18 +66,7 @@ async function createBookingHandler(req,res) {
 
 }
 
-
-async function addFeedBackHandler(req,res) {
-}
-
-
-
-async function rideHistoryHandler(req,res) {
-}
-
-
 module.exports = {
     createBookingHandler,
-    addFeedBackHandler,
-    rideHistoryHandler
+ 
 };

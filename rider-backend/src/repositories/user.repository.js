@@ -20,11 +20,11 @@ async function findById(id) {
 
 
 async function updateLocation(driverId, location) {
-    return await User.findOneAndUpdate({ _id: id }, {
+    return await User.findOneAndUpdate({ _id: driverId }, {
         $set: {
-            locationa
+            location
         }
-    },{new:true});
+    },{returnDocument: 'after'});
 }
 
 module.exports = {

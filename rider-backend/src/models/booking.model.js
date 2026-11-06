@@ -27,7 +27,7 @@ const bookingSchema = new mongoose.Schema({
     ,
     status: {
         type: String,
-        enum: ["pending", "confirmed", "accepted", "completed", "cancelled"],
+        enum: ["pending", "confirmed", "completed", "cancelled"],
         default: "pending"
     },
 
@@ -36,7 +36,7 @@ const bookingSchema = new mongoose.Schema({
             type: Number,
             required: true
         },
-        longitute: {
+        longitude: {
             type: Number,
             required: true
         }

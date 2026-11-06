@@ -34,19 +34,18 @@ io.on("connection", (socket) => {
     })
 
     // handle disconnection
-    socket.on("disconnect", async (data) => {
+   socket.on("disconnect", async () => {
         try {
-            const { driverId } = data;
+            const driverId = socket.data.driverId;
 
-            await removeDriverSocket(driverId);
-
+            if (driverId) {
+                await removeDriverSocket(driverId);
+                console.log("Driver : ", driverId, "removed from redis socket map");
+            }
         } catch (error) {
-            console.log("error set driver socket", error)
-            socket.emit("error", {
-                message: "Connection failed"
-            })
+            console.log("error remove driver socket", error);
         }
-    })
+    });
 })
 
 server.listen(PORT, () => {

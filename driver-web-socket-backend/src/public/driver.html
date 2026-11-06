@@ -86,11 +86,6 @@
         border-color: #2563eb;
       }
 
-      .form-group input:disabled {
-        background-color: #f3f4f6;
-        cursor: not-allowed;
-      }
-
       .btn {
         width: 100%;
         padding: 12px;
@@ -107,12 +102,8 @@
         background-color: #1d4ed8;
       }
 
-      .btn:disabled {
-        background-color: #93c5fd;
-        cursor: not-allowed;
-      }
-
       .ride-section {
+        display: none; /* Hidden by default until login */
         margin-top: 24px;
         padding-top: 16px;
         border-top: 1px solid #eef0f2;
@@ -181,7 +172,7 @@
   <body>
     <div class="card">
       <div class="header">
-        <h1 class="title">Driver</h1>
+        <h1 class="title" id="appTitle">Driver</h1>
         <span id="statusBadge" class="status-badge">Disconnected</span>
       </div>
 
@@ -207,7 +198,7 @@
         <button type="submit" id="submitBtn" class="btn">Login & Connect</button>
       </form>
 
-      <div class="ride-section">
+      <div class="ride-section" id="rideSection">
         <h2 class="ride-title">Ride Notifications</h2>
         <div id="rideContainer" class="empty-rides">No active rides</div>
       </div>
@@ -216,10 +207,9 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
       const loginForm = document.getElementById("loginForm");
-      const emailInput = document.getElementById("email");
-      const passwordInput = document.getElementById("password");
-      const submitBtn = document.getElementById("submitBtn");
+      const appTitle = document.getElementById("appTitle");
       const statusBadge = document.getElementById("statusBadge");
+      const rideSection = document.getElementById("rideSection");
       const rideContainer = document.getElementById("rideContainer");
 
       let socket = null;
@@ -230,8 +220,8 @@
       loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const email = emailInput.value;
-        const password = passwordInput.value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
         try {
           const response = await fetch("http://localhost:3000/api/auth/login", {
@@ -244,13 +234,18 @@
             throw new Error("Login failed");
           }
 
-          const data = await response.json();
+          const responseData = await response.json();
 
-          token = data.data.token;
-          currentDriverId = data.data.user._id;
-          alert("Login successfully");
+          token = responseData.data.token;
+          const user = responseData.data.user;
+          currentDriverId = user._id;
 
-          connectSocketIO(token, data.data.user);
+          // Update header heading, remove login form, and show the ride section
+          appTitle.textContent = "Welcome, " + user.name;
+          loginForm.remove();
+          rideSection.style.display = "block";
+
+          connectSocketIO(token, user);
         } catch (err) {
           console.error(err);
           alert("Login Failed");
@@ -276,7 +271,7 @@
             driverId: userData._id,
             name: userData.name,
             vehicleType: "MotorBike",
-            rating: userData.rating,
+            rating: userData.rating || 3,
           });
         });
 
@@ -292,10 +287,7 @@
 
       function setUpSocketEvents() {
         socket.on("login-success", (data) => {
-          emailInput.disabled = true;
-          passwordInput.disabled = true;
-          submitBtn.disabled = true;
-          submitBtn.textContent = "Logged In & Ready";
+          console.log("Socket authenticated:", data.message);
         });
 
         socket.on("new-ride-notification", (data) => {
@@ -312,6 +304,7 @@
           renderRidesList();
         });
 
+        // Triggered for all connected drivers (including the one who accepted) via socket broadcast
         socket.on("remove-ride-notification", (data) => {
           const rideIdToRemove = data.rideId;
           if (currentRideNotifications.has(rideIdToRemove)) {
@@ -345,8 +338,9 @@
           buttonElement.textContent = "Confirmed";
           buttonElement.style.backgroundColor = "#4b5563";
 
-          currentRideNotifications.delete(bookingId);
-          renderRidesList();
+          // Note: We no longer call currentRideNotifications.delete(bookingId) directly here.
+          // The backend successfully handles booking update and triggers the socket event 
+          // 'remove-ride-notification', which will clean up the card cleanly for everyone.
         } catch (error) {
           console.error(error);
           alert("Error confirming ride");
