@@ -1,8 +1,8 @@
-const {redisClient} = require("../utils/redis.client");
+const { redisClient } = require("../utils/redis.client");
 
 
 class LocationService {
-    async addDriverLocation(driverId, latitude, longitude) {
+    async addDriverLocation(driverId, longitude,latitude) {
         try {
 
             await redisClient.sendCommand(
@@ -40,28 +40,23 @@ class LocationService {
         }
     }
 
-    async setDriverSocket(driverId, socketId) {
-        await redisClient.set(
-            `driver:${driverId}`, socketId
-        )
+
+    async storeNotifiedDrivers(bookingId, driverIds) {
+        for (const driverId of driverIds) {
+            const addedCount = await redisClient.sAdd(`notifiedDrivers:${bookingId}`, driverId);
+       
+            console.log(`Added drivers id : ${driverId} , to set of booking id :${bookingId} : count : ${addedCount}`)
+        }
     }
 
-    async getDriverSocket(driverId) {
-        return await redisClient.get(
-            `driver:${driverId}`
-        )
+    async getNotifiedDrivers(bookingId) {
+        const drivers = await redisClient.sMembers(`notifiedDrivers:${bookingId}`);
+        return drivers
     }
 
-    async removeDriverSocket(driverId) {
-        return await redisClient.del(
-            `driver:${driverId}`
-        )
-    }
 
-     async removeBySocket(socketId) {
-        const driverId = await redisClient.get(socketId);
-        await removeDriverSocket(driverId)
-    }
+    
+
 }
 
 

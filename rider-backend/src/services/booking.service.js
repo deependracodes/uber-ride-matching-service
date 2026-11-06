@@ -45,9 +45,30 @@ async function findNearByDrivers(source,radius=5) {
     const latitude = parseFloat(source.latitude)
     const radiusInKm = parseFloat(radius)
 
+    if(isNaN(longitude) || isNaN(latitude) || isNaN(radiusInKm)){
+        throw new Error("Invalid coordinates");
+    }
+
+    // call redis db
     const drivers = await locationService.nearByDrivers(longitude,latitude,radiusInKm)
    
     return drivers;
+}
+
+
+async function assignDriver(bookingId,driverId) {
+    
+    const booking = await bookingRepository.update(
+        bookingId,
+        driverId,
+        "confirmed"
+    )
+
+    if(!booking){
+        throw new Error("Booking already confirmed or does not exists")
+    }
+
+    return booking;
 }
 
 
@@ -56,5 +77,6 @@ async function findNearByDrivers(source,radius=5) {
 
 module.exports = {
     createBooking,
-    findNearByDrivers
+    findNearByDrivers,
+    assignDriver
 }

@@ -140,7 +140,7 @@
         border: 1px solid #bfdbfe;
         border-radius: 6px;
         padding: 12px;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
       }
 
       .ride-card h4 {
@@ -152,6 +152,29 @@
       .ride-card p {
         font-size: 12px;
         color: #3b82f6;
+        margin-top: 2px;
+      }
+
+      .confirm-btn {
+        width: 100%;
+        margin-top: 10px;
+        padding: 8px;
+        background-color: #059669;
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .confirm-btn:hover {
+        background-color: #047857;
+      }
+
+      .confirm-btn:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
       }
     </style>
   </head>
@@ -227,7 +250,6 @@
           currentDriverId = data.data.user._id;
           alert("Login successfully");
 
-          // Initialize Socket.io connection after successful REST login
           connectSocketIO(token, data.data.user);
         } catch (err) {
           console.error(err);
@@ -250,7 +272,6 @@
           statusBadge.textContent = "Connected";
           statusBadge.classList.add("connected");
 
-          // Emit driver login event safely after connection is established
           socket.emit("driver-login", {
             driverId: userData._id,
             name: userData.name,
@@ -279,7 +300,7 @@
 
         socket.on("new-ride-notification", (data) => {
           if (Array.isArray(data)) {
-            data.forEach(ride => {
+            data.forEach(function(ride) {
               const rideId = ride.rideId || ride.id || Math.random();
               currentRideNotifications.set(rideId, ride);
             });
@@ -290,6 +311,48 @@
 
           renderRidesList();
         });
+
+        socket.on("remove-ride-notification", (data) => {
+          const rideIdToRemove = data.rideId;
+          if (currentRideNotifications.has(rideIdToRemove)) {
+            currentRideNotifications.delete(rideIdToRemove);
+            renderRidesList();
+          }
+        });
+      }
+
+      async function confirmRide(bookingId, buttonElement) {
+        try {
+          buttonElement.disabled = true;
+          buttonElement.textContent = "Confirming...";
+
+          const response = await fetch("http://localhost:3000/api/driver/confirm", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ bookingId: bookingId })
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to confirm ride");
+          }
+
+          const result = await response.json();
+          alert("Ride confirmed successfully!");
+          
+          buttonElement.textContent = "Confirmed";
+          buttonElement.style.backgroundColor = "#4b5563";
+
+          currentRideNotifications.delete(bookingId);
+          renderRidesList();
+        } catch (error) {
+          console.error(error);
+          alert("Error confirming ride");
+          buttonElement.disabled = false;
+          buttonElement.textContent = "Confirm Ride";
+        }
       }
 
       function renderRidesList() {
@@ -302,24 +365,31 @@
         rideContainer.classList.remove("empty-rides");
         rideContainer.innerHTML = "";
 
-        currentRideNotifications.forEach((notification, rideId) => {
+        currentRideNotifications.forEach(function(notification, rideIdKey) {
           const rideElement = document.createElement("div");
           rideElement.className = "ride-card";
           
-          const info = notification.rideInfo || {};
-          const fare = info.fare || notification.fare || 0;
-          const distance = info.distance || notification.distance || 0;
-          const srcLat = info.source?.latitude || notification.source?.latitude || 0;
-          const srcLng = info.source?.longitute || info.source?.longitude || notification.source?.longitute || notification.source?.longitude || 0;
-          const destLat = info.destination?.latitude || notification.destination?.latitude || 0;
-          const destLng = info.destination?.longitude || notification.destination?.longitude || 0;
+          const rideId = notification.rideId || rideIdKey;
+          const info = notification.rideInfo || notification;
 
-          rideElement.innerHTML = `
-              <h4>Ride #${rideId}</h4>
-              <p><strong>Fare:</strong> ₹${fare} | <strong>Distance:</strong> ${distance} km</p>
-              <p><strong>Pickup:</strong> [${srcLat}, ${srcLng}]</p>
-              <p><strong>Dropoff:</strong> [${destLat}, ${destLng}]</p>
-          `;
+          const estimatedFare = info.estimatedFare || info.fare || 0;
+          const distance = info.distance || 0;
+          const passengerId = info.passengerId ? String(info.passengerId).slice(-6) : "N/A";
+          
+          const srcLat = info.source && info.source.latitude ? info.source.latitude : 0;
+          const srcLng = info.source && (info.source.longitude || info.source.longitute) ? (info.source.longitude || info.source.longitute) : 0;
+          
+          const destLat = info.destination && info.destination.latitude ? info.destination.latitude : 0;
+          const destLng = info.destination && (info.destination.longitude || info.destination.longitute) ? (info.destination.longitude || info.destination.longitute) : 0;
+
+          rideElement.innerHTML = 
+              "<h4>Ride #" + rideId + "</h4>" +
+              "<p><strong>Fare:</strong> ₹" + estimatedFare + " | <strong>Distance:</strong> " + distance + " km</p>" +
+              "<p><strong>Passenger ID:</strong> ..." + passengerId + "</p>" +
+              "<p><strong>Pickup:</strong> [" + srcLat + ", " + srcLng + "]</p>" +
+              "<p><strong>Dropoff:</strong> [" + destLat + ", " + destLng + "]</p>" +
+              "<button class=\"confirm-btn\" onclick=\"confirmRide('" + rideId + "', this)\">Confirm Ride</button>";
+
           rideContainer.appendChild(rideElement);
         });
       }

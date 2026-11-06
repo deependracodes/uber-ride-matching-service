@@ -7,7 +7,7 @@ const driverRouter = express.Router();
 
 driverRouter.post("/location",authMiddleware , updateLocationHandler);
 
-driverRouter.post("/accept", acceptRideHandler);
+driverRouter.post("/confirm",authMiddleware, acceptRideHandler);
 
 driverRouter.get("/bookings", rideHistoryHandler);
 
